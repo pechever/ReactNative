@@ -1,0 +1,682 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  SafeAreaView,
+  FlatList,
+  Alert,
+  ActivityIndicator,
+  StatusBar,
+  Modal,
+  RefreshControl,
+} from 'react-native';
+
+// Interfaces
+interface User {
+  id: string;
+  name: string;
+  accountNumber: string;
+  email: string;
+}
+
+interface Account {
+  id: string;
+  accountNumber: string;
+  type: 'savings' | 'checking' | 'credit';
+  balance: number;
+  currency: string;
+  lastUpdate: string;
+}
+
+interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  type: 'income' | 'expense';
+  category: string;
+  balance: number;
+}
+
+// Mock Data
+const mockUser: User = {
+  id: '1',
+  name: 'Juan Pérez',
+  accountNumber: '1234567890',
+  email: 'juan.perez@email.com',
+};
+
+const mockAccounts: Account[] = [
+  {
+    id: '1',
+    accountNumber: '1234567890',
+    type: 'savings',
+    balance: 15750.50,
+    currency: 'USD',
+    lastUpdate: '2025-08-05 14:30:00',
+  },
+  {
+    id: '2',
+    accountNumber: '0987654321',
+    type: 'checking',
+    balance: 3200.75,
+    currency: 'USD',
+    lastUpdate: '2025-08-05 14:30:00',
+  },
+  {
+    id: '3',
+    accountNumber: '5555666677',
+    type: 'credit',
+    balance: -850.25,
+    currency: 'USD',
+    lastUpdate: '2025-08-05 14:30:00',
+  },
+];
+
+const mockTransactions: Transaction[] = [
+  {
+    id: '1',
+    date: '2025-08-05',
+    description: 'Depósito salario',
+    amount: 2500.00,
+    type: 'income',
+    category: 'Salario',
+    balance: 15750.50,
+  },
+  {
+    id: '2',
+    date: '2025-08-04',
+    description: 'Pago servicios públicos',
+    amount: -125.30,
+    type: 'expense',
+    category: 'Servicios',
+    balance: 13250.50,
+  },
+  {
+    id: '3',
+    date: '2025-08-03',
+    description: 'Transferencia recibida',
+    amount: 800.00,
+    type: 'income',
+    category: 'Transferencia',
+    balance: 13375.80,
+  },
+  {
+    id: '4',
+    date: '2025-08-02',
+    description: 'Compra supermercado',
+    amount: -89.45,
+    type: 'expense',
+    category: 'Alimentación',
+    balance: 12575.80,
+  },
+  {
+    id: '5',
+    date: '2025-08-01',
+    description: 'Retiro ATM',
+    amount: -200.00,
+    type: 'expense',
+    category: 'Retiro',
+    balance: 12665.25,
+  },
+];
+
+// Main Component
+const BalanceApp: React.FC = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [showTransactionModal, setShowTransactionModal] = useState<boolean>(false);
+  
+  // Login form states
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+
+  // Simulate API calls
+  const simulateLogin = async (username: string, password: string): Promise<boolean> => {
+    setLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setLoading(false);
+    return username === 'demo' && password === '1234';
+  };
+
+  const loadUserData = async (): Promise<void> => {
+    setLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setUser(mockUser);
+    setAccounts(mockAccounts);
+    setTransactions(mockTransactions);
+    setSelectedAccount(mockAccounts[0]);
+    setLoading(false);
+  };
+
+  const refreshData = async (): Promise<void> => {
+    setRefreshing(true);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Simulate small balance changes
+    const updatedAccounts = accounts.map(account => ({
+      ...account,
+      balance: account.balance + (Math.random() - 0.5) * 100,
+      lastUpdate: new Date().toISOString().slice(0, 19).replace('T', ' '),
+    }));
+    setAccounts(updatedAccounts);
+    setSelectedAccount(updatedAccounts.find(acc => acc.id === selectedAccount?.id) || updatedAccounts[0]);
+    setRefreshing(false);
+  };
+
+  const handleLogin = async (): Promise<void> => {
+    if (!username || !password) {
+      Alert.alert('Error', 'Por favor ingresa usuario y contraseña');
+      return;
+    }
+
+    const success = await simulateLogin(username, password);
+    if (success) {
+      setIsLoggedIn(true);
+      await loadUserData();
+    } else {
+      Alert.alert('Error', 'Credenciales incorrectas. Usa: demo / 1234');
+    }
+  };
+
+  const handleLogout = (): void => {
+    setIsLoggedIn(false);
+    setUser(null);
+    setAccounts([]);
+    setTransactions([]);
+    setUsername('');
+    setPassword('');
+  };
+
+  const formatCurrency = (amount: number, currency: string = 'USD'): string => {
+    return new Intl.NumberFormat('es-EC', {
+      style: 'currency',
+      currency: currency,
+    }).format(amount);
+  };
+
+  const getAccountTypeLabel = (type: string): string => {
+    const labels = {
+      savings: 'Ahorros',
+      checking: 'Corriente',
+      credit: 'Crédito',
+    };
+    return labels[type as keyof typeof labels] || type;
+  };
+
+  const renderTransaction = ({ item }: { item: Transaction }) => (
+    <View style={styles.transactionItem}>
+      <View style={styles.transactionInfo}>
+        <Text style={styles.transactionDescription}>{item.description}</Text>
+        <Text style={styles.transactionDate}>{item.date}</Text>
+        <Text style={styles.transactionCategory}>{item.category}</Text>
+      </View>
+      <View style={styles.transactionAmount}>
+        <Text style={[
+          styles.amount,
+          item.type === 'income' ? styles.incomeAmount : styles.expenseAmount
+        ]}>
+          {item.type === 'income' ? '+' : ''}{formatCurrency(item.amount)}
+        </Text>
+        <Text style={styles.balanceAfter}>
+          Saldo: {formatCurrency(item.balance)}
+        </Text>
+      </View>
+    </View>
+  );
+
+  const renderAccount = ({ item }: { item: Account }) => (
+    <TouchableOpacity
+      style={[
+        styles.accountCard,
+        selectedAccount?.id === item.id && styles.selectedAccountCard
+      ]}
+      onPress={() => setSelectedAccount(item)}
+    >
+      <View style={styles.accountHeader}>
+        <Text style={styles.accountType}>{getAccountTypeLabel(item.type)}</Text>
+        <Text style={styles.accountNumber}>**** {item.accountNumber.slice(-4)}</Text>
+      </View>
+      <Text style={[
+        styles.accountBalance,
+        item.balance < 0 ? styles.negativeBalance : styles.positiveBalance
+      ]}>
+        {formatCurrency(item.balance, item.currency)}
+      </Text>
+      <Text style={styles.lastUpdate}>
+        Actualizado: {item.lastUpdate}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  if (!isLoggedIn) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#1e3a8a" />
+        <View style={styles.loginContainer}>
+          <View style={styles.loginHeader}>
+            <Text style={styles.appTitle}>BankApp</Text>
+            <Text style={styles.appSubtitle}>Consulta de Saldos</Text>
+          </View>
+          
+          <View style={styles.loginForm}>
+            <Text style={styles.loginTitle}>Iniciar Sesión</Text>
+            
+            <TextInput
+              style={styles.input}
+              placeholder="Usuario"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
+              placeholderTextColor="#9ca3af"
+            />
+            
+            <TextInput
+              style={styles.input}
+              placeholder="Contraseña"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              placeholderTextColor="#9ca3af"
+            />
+            
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text style={styles.loginButtonText}>Ingresar</Text>
+              )}
+            </TouchableOpacity>
+            
+            <Text style={styles.demoText}>
+              Demo: usuario "demo", contraseña "1234"
+            </Text>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#1e3a8a" />
+      
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.welcomeText}>Bienvenido</Text>
+          <Text style={styles.userName}>{user?.name}</Text>
+        </View>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+          <Text style={styles.logoutButtonText}>Salir</Text>
+        </TouchableOpacity>
+      </View>
+
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1e3a8a" />
+          <Text style={styles.loadingText}>Cargando información...</Text>
+        </View>
+      ) : (
+        <>
+          {/* Accounts List */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Mis Cuentas</Text>
+            <FlatList
+              data={accounts}
+              renderItem={renderAccount}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.accountsList}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={refreshData}
+                  colors={['#1e3a8a']}
+                />
+              }
+            />
+          </View>
+
+          {/* Quick Actions */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
+            <View style={styles.quickActions}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => setShowTransactionModal(true)}
+              >
+                <Text style={styles.actionButtonText}>Ver Movimientos</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={refreshData}
+              >
+                <Text style={styles.actionButtonText}>Actualizar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Recent Transactions */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Últimos Movimientos</Text>
+            <FlatList
+              data={transactions.slice(0, 3)}
+              renderItem={renderTransaction}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+            />
+          </View>
+        </>
+      )}
+
+      {/* Transactions Modal */}
+      <Modal
+        visible={showTransactionModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Historial de Movimientos</Text>
+            <TouchableOpacity
+              onPress={() => setShowTransactionModal(false)}
+              style={styles.closeButton}
+            >
+              <Text style={styles.closeButtonText}>Cerrar</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <FlatList
+            data={transactions}
+            renderItem={renderTransaction}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.transactionsList}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={refreshData}
+                colors={['#1e3a8a']}
+              />
+            }
+          />
+        </SafeAreaView>
+      </Modal>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  loginContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: '#1e3a8a',
+  },
+  loginHeader: {
+    alignItems: 'center',
+    marginBottom: 50,
+  },
+  appTitle: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 8,
+  },
+  appSubtitle: {
+    fontSize: 16,
+    color: '#bfdbfe',
+  },
+  loginForm: {
+    backgroundColor: '#ffffff',
+    margin: 20,
+    borderRadius: 16,
+    padding: 24,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  loginTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    fontSize: 16,
+    backgroundColor: '#f9fafb',
+  },
+  loginButton: {
+    backgroundColor: '#1e3a8a',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  loginButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  demoText: {
+    textAlign: 'center',
+    marginTop: 16,
+    color: '#6b7280',
+    fontSize: 14,
+  },
+  header: {
+    backgroundColor: '#1e3a8a',
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  welcomeText: {
+    color: '#bfdbfe',
+    fontSize: 14,
+  },
+  userName: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  logoutButton: {
+    backgroundColor: '#dc2626',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  logoutButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    color: '#6b7280',
+    fontSize: 16,
+  },
+  section: {
+    margin: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 12,
+  },
+  accountsList: {
+    paddingRight: 16,
+  },
+  accountCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+    marginRight: 12,
+    width: 280,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  selectedAccountCard: {
+    borderWidth: 2,
+    borderColor: '#1e3a8a',
+  },
+  accountHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  accountType: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6b7280',
+    textTransform: 'uppercase',
+  },
+  accountNumber: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  accountBalance: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  positiveBalance: {
+    color: '#059669',
+  },
+  negativeBalance: {
+    color: '#dc2626',
+  },
+  lastUpdate: {
+    fontSize: 12,
+    color: '#9ca3af',
+  },
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  actionButton: {
+    backgroundColor: '#1e3a8a',
+    flex: 1,
+    margin: 4,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  actionButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  transactionItem: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  transactionInfo: {
+    flex: 1,
+  },
+  transactionDescription: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 4,
+  },
+  transactionDate: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 2,
+  },
+  transactionCategory: {
+    fontSize: 12,
+    color: '#9ca3af',
+  },
+  transactionAmount: {
+    alignItems: 'flex-end',
+  },
+  amount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  incomeAmount: {
+    color: '#059669',
+  },
+  expenseAmount: {
+    color: '#dc2626',
+  },
+  balanceAfter: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  modalHeader: {
+    backgroundColor: '#1e3a8a',
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  closeButton: {
+    backgroundColor: '#dc2626',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  closeButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  transactionsList: {
+    padding: 16,
+  },
+});
+
+export default BalanceApp;
