@@ -1,0 +1,200 @@
+import React from 'react';
+import {
+  SafeAreaView,
+  ScrollView,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
+
+const Button = () => {
+  const handleClick = () => {
+    alert('¡Botón clicado!');
+  };
+
+  return (
+    <TouchableOpacity style={styles.button} onPress={handleClick}>
+      <Text style={styles.buttonText}>Clic aquí</Text>
+    </TouchableOpacity>
+  );
+};
+
+const App = () => {
+  const name = 'Juan';
+  const number = 5;
+  const items = ['Manzana', 'Banana', 'Naranja'];
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView>
+        <View style={styles.container}>
+          {/* Ejemplo 1: Hola, mundo! */}
+          <View style={styles.section}>
+            <Text style={styles.code}>
+              {'const element = <h1>Hola, mundo!</h1>'}
+            </Text>
+            <Text style={styles.resultTitle}>Resultado:</Text>
+            <Text style={styles.h1}>Hola, mundo!</Text>
+          </View>
+
+          {/* Ejemplo 2: View con título y párrafo */}
+          <View style={styles.section}>
+            <Text style={styles.code}>
+              {`const element = (
+  <div>
+    <h1>Título</h1>
+    <p>Este es un párrafo.</p>
+  </div>
+);`}
+            </Text>
+            <Text style={styles.resultTitle}>Resultado:</Text>
+            <View style={styles.div}>
+              <Text style={styles.h1}>Título</Text>
+              <Text style={styles.p}>Este es un párrafo.</Text>
+            </View>
+          </View>
+
+          {/* Ejemplo 3: Fragmento con título y párrafo */}
+          <View style={styles.section}>
+            <Text style={styles.code}>
+              {`const element = (
+  <>
+    <h1>Título</h1>
+    <p>Este es un párrafo.</p>
+  </>
+);`}
+            </Text>
+            <Text style={styles.resultTitle}>Resultado:</Text>
+            <View>
+              <Text style={styles.h1}>Título</Text>
+              <Text style={styles.p}>Este es un párrafo.</Text>
+            </View>
+          </View>
+
+          {/* Ejemplo 4: Expresión con variable */}
+          <View style={styles.section}>
+            <Text style={styles.code}>
+              {`const name = "Juan";
+const element = <h1>Hola, {name}!</h1>;`}
+            </Text>
+            <Text style={styles.resultTitle}>Resultado:</Text>
+            <Text style={styles.h1}>Hola, {name}!</Text>
+          </View>
+
+          {/* Ejemplo 5: Expresión con cálculo */}
+          <View style={styles.section}>
+            <Text style={styles.code}>
+              {`const number = 5;
+const element = <p>El doble de {number} es {number * 2}.</p>;`}
+            </Text>
+            <Text style={styles.resultTitle}>Resultado:</Text>
+            <Text style={styles.p}>El doble de {number} es {number * 2}.</Text>
+          </View>
+
+          {/* Ejemplo 6: Lista con map */}
+          <View style={styles.section}>
+            <Text introduction to JSX in React Native style={styles.code}>
+              {`const items = ["Manzana", "Banana", "Naranja"];
+const list = (
+  <ul>
+    {items.map((item, index) => (
+      <li key={index}>{item}</li>
+    ))}
+  </ul>
+);`}
+            </Text>
+            <Text style={styles.resultTitle}>Resultado:</Text>
+            <View style={styles.ul}>
+              {items.map((item, index) => (
+                <Text key={index} style={styles.li}>
+                  {item}
+                </Text>
+              ))}
+            </View>
+          </View>
+
+          {/* Ejemplo 7: Componente Button */}
+          <View style={styles.section}>
+            <Text style={styles.code}>
+              {`function Button() {
+  const handleClick = () => {
+    alert("¡Botón clicado!");
+  };
+
+  return <button onClick={handleClick}>Clic aquí</button>;
+}`}
+            </Text>
+            <Text style={styles.resultTitle}>Resultado:</Text>
+            <Button />
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f0f0f0',
+  },
+  container: {
+    padding: 20,
+  },
+  section: {
+    marginBottom: 30,
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  code: {
+    fontFamily: 'monospace',
+    fontSize: 14,
+    backgroundColor: '#f5f5f5',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  resultTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  h1: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    color: '#000',
+  },
+  p: {
+    fontSize: 16,
+    color: '#333',
+  },
+  ul: {
+    paddingLeft: 20,
+  },
+  li: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+});
+
+export default App;
