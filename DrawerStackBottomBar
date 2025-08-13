@@ -1,0 +1,261 @@
+// App.js
+import * as React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import { Button, Text, View, StyleSheet, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+// Crear los navigators
+const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+const Drawer = createDrawerNavigator();
+
+// Pantalla de lista de tareas
+function TaskListScreen({ navigation }) {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Lista de Tareas</Text>
+      <Button
+        title="Ver Detalles de Tarea"
+        onPress={() => navigation.navigate('TaskDetails', { taskId: 1 })}
+      />
+    </View>
+  );
+}
+
+// Pantalla de detalles de tarea
+function TaskDetailsScreen({ route, navigation }) {
+  const { taskId } = route.params || {};
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Detalles de la Tarea #{taskId}</Text>
+      <Text style={styles.subtitle}>Descripción: Preparar presentación</Text>
+      <Button title="Volver" onPress={() => navigation.goBack()} />
+    </View>
+  );
+}
+
+// Pantalla de tareas en progreso
+function InProgressTasksScreen({ navigation }) {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Tareas en Progreso</Text>
+      <Text style={styles.subtitle}>2 tareas en curso</Text>
+      <Button
+        title="Ver Detalles de Tarea"
+        onPress={() => navigation.navigate('TaskDetails', { taskId: 2 })}
+      />
+    </View>
+  );
+}
+
+// Pantalla de tareas completadas
+function CompletedTasksScreen({ navigation }) {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Tareas Completadas</Text>
+      <Text style={styles.subtitle}>5 tareas finalizadas</Text>
+    </View>
+  );
+}
+
+// Pantalla de perfil
+function ProfileScreen({ navigation }) {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Perfil del Usuario</Text>
+      <Text style={styles.subtitle}>Nombre: Juan Pérez</Text>
+      <Button
+        title="Ver Tarea Favorita"
+        onPress={() => navigation.navigate('TaskDetails', { taskId: 999 })}
+      />
+    </View>
+  );
+}
+
+// Pantalla de estadísticas
+function StatsScreen({ navigation }) {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Estadísticas</Text>
+      <Text style={styles.subtitle}>Tareas completadas este mes: 15</Text>
+      <Text style={styles.subtitle}>Productividad: 85%</Text>
+    </View>
+  );
+}
+
+// Stack Navigator para la sección de tareas
+function TasksStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={({ navigation }) => ({
+        headerStyle: { backgroundColor: '#6200ea' },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' },
+        headerLeft: () => (
+          <TouchableOpacity
+            onPress={() => navigation.openDrawer()}
+            style={{ marginLeft: 10 }}
+          >
+            <Icon name="menu" size={30} color="#fff" />
+          </TouchableOpacity>
+        ),
+      })}
+    >
+      <Stack.Screen
+        name="TaskList"
+        component={TaskListScreen}
+        options={{ title: 'Tareas' }}
+      />
+      <Stack.Screen
+        name="TaskDetails"
+        component={TaskDetailsScreen}
+        options={{ title: 'Detalles de Tarea' }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+// Tab Navigator para las categorías de tareas
+function TasksTabNavigator() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ navigation }) => ({
+        tabBarActiveTintColor: '#6200ea',
+        tabBarInactiveTintColor: '#757575',
+        tabBarStyle: { backgroundColor: '#f5f5f5' },
+        headerStyle: { backgroundColor: '#6200ea' },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' },
+        headerLeft: () => (
+          <TouchableOpacity
+            onPress={() => navigation.openDrawer()}
+            style={{ marginLeft: 10 }}
+          >
+            <Icon name="menu" size={30} color="#fff" />
+          </TouchableOpacity>
+        ),
+      })}
+    >
+      <Tab.Screen
+        name="Pending"
+        component={TasksStack}
+        options={{
+          tabBarLabel: 'Pendientes',
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="pending" color={color} size={size} />
+          ),
+          headerShown: false, // Evitar header redundante
+        }}
+      />
+      <Tab.Screen
+        name="InProgress"
+        component={InProgressTasksScreen}
+        options={{
+          tabBarLabel: 'En Progreso',
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="autorenew" color={color} size={size} />
+          ),
+          title: 'Tareas en Progreso',
+        }}
+      />
+      <Tab.Screen
+        name="Completed"
+        component={CompletedTasksScreen}
+        options={{
+          tabBarLabel: 'Completadas',
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="check-circle" color={color} size={size} />
+          ),
+          title: 'Tareas Completadas',
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+// Componente principal con Drawer Navigator
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Drawer.Navigator
+        screenOptions={({ navigation }) => ({
+          drawerStyle: {
+            backgroundColor: '#f5f5f5',
+            width: 250,
+          },
+          drawerActiveTintColor: '#6200ea',
+          drawerInactiveTintColor: '#424242',
+          headerStyle: { backgroundColor: '#6200ea' },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold' },
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => navigation.openDrawer()}
+              style={{ marginLeft: 10 }}
+            >
+              <Icon name="menu" size={30} color="#fff" />
+            </TouchableOpacity>
+          ),
+        })}
+      >
+        <Drawer.Screen
+          name="Tasks"
+          component={TasksTabNavigator}
+          options={{
+            drawerLabel: 'Tareas',
+            drawerIcon: ({ color, size }) => (
+              <Icon name="list" color={color} size={size} />
+            ),
+            headerShown: false, // Evitar header redundante
+          }}
+        />
+        <Drawer.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{
+            drawerLabel: 'Perfil',
+            drawerIcon: ({ color, size }) => (
+              <Icon name="person" color={color} size={size} />
+            ),
+            title: 'Perfil del Usuario',
+          }}
+        />
+        <Drawer.Screen
+          name="Stats"
+          component={StatsScreen}
+          options={{
+            drawerLabel: 'Estadísticas',
+            drawerIcon: ({ color, size }) => (
+              <Icon name="bar-chart" color={color} size={size} />
+            ),
+            title: 'Estadísticas',
+          }}
+        />
+      </Drawer.Navigator>
+    </NavigationContainer>
+  );
+}
+
+// Estilos
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  subtitle: {
+    fontSize: 18,
+    color: '#424242',
+    marginBottom: 16,
+  },
+});
