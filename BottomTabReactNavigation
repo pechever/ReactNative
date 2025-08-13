@@ -1,0 +1,92 @@
+// App.js
+import * as React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Text, View, StyleSheet } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+// Crear el Tab Navigator
+const Tab = createBottomTabNavigator();
+
+// Pantalla de tareas pendientes
+function PendingTasksScreen() {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Tareas Pendientes</Text>
+      <Text style={styles.subtitle}>3 tareas por completar</Text>
+    </View>
+  );
+}
+
+// Pantalla de tareas en progreso
+function InProgressTasksScreen() {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Tareas en Progreso</Text>
+      <Text style={styles.subtitle}>2 tareas en curso</Text>
+    </View>
+  );
+}
+
+// Pantalla de tareas completadas
+function CompletedTasksScreen() {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Tareas Completadas</Text>
+      <Text style={styles.subtitle}>5 tareas finalizadas</Text>
+    </View>
+  );
+}
+
+// Componente principal
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Tab.Navigator
+        screenOptions={{
+          tabBarActiveTintColor: '#6200ea',
+          tabBarInactiveTintColor: '#757575',
+          tabBarStyle: { backgroundColor: '#f5f5f5' },
+        }}
+      >
+        <Tab.Screen
+          name="Pending"
+          component={PendingTasksScreen}
+          options={{
+            tabBarLabel: 'Pendientes',
+            tabBarIcon: ({ color, size }) => (
+              <Icon name="pending" color={color} size={size} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="InProgress"
+          component={InProgressTasksScreen}
+          options={{
+            tabBarLabel: 'En Progreso',
+            tabBarIcon: ({ color, size }) => (
+              <Icon name="autorenew" color={color} size={size} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Completed"
+          component={CompletedTasksScreen}
+          options={{
+            tabBarLabel: 'Completadas',
+            tabBarIcon: ({ color, size }) => (
+              <Icon name="check-circle" color={color} size={size} />
+            ),
+          }}
+        />
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
+}
+
+// Estilos
+const styles = StyleSheet.create({
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
+  subtitle: { fontSize: 18, color: '#424242' },
+});
