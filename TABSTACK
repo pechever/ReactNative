@@ -1,0 +1,137 @@
+// App.js
+import * as React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Button, Text, View, StyleSheet } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+// Crear los navigators
+const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+
+// Pantalla de lista de tareas
+function TaskListScreen({ navigation }) {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Lista de Tareas</Text>
+      <Button
+        title="Ver Detalles de Tareas"
+        onPress={() => navigation.navigate('TaskDetails', { taskId: 2 })}
+      />
+    </View>
+  );
+}
+
+// Pantalla de detalles de tarea
+function TaskDetailsScreen({ route, navigation }) {
+  const { taskId } = route.params || {};
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Detalles de la Tarea #{taskId}</Text>
+      <Text style={styles.subtitle}>Descripción: Reunión con el equipo</Text>
+      <Button title="REGRESAR" onPress={() => navigation.goBack()} />
+    </View>
+  );
+}
+
+// Pantalla de tareas en progreso
+function InProgressTasksScreen() {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Tareas en Progreso</Text>
+      <Text style={styles.subtitle}>2 tareas en curso</Text>
+    </View>
+  );
+}
+
+// Pantalla de perfil
+function ProfileScreen({ navigation }) {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Perfil del Usuario</Text>
+      <Button
+        title="Ver Detalles de Tarea Favorita"
+        onPress={() => navigation.navigate('TaskDetails', { taskId: 999 })}
+      />
+    </View>
+  );
+}
+
+// Stack Navigator para la pestaña de tareas
+function TasksStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: '#6200ea' },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' },
+      }}
+    >
+      <Stack.Screen
+        name="TaskList"
+        component={TaskListScreen}
+        options={{ title: 'Tareas' }}
+      />
+      <Stack.Screen
+        name="TaskDetails"
+        component={TaskDetailsScreen}
+        options={{ title: 'Detalles de Tarea' }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+// Componente principal
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Tab.Navigator
+        screenOptions={{
+          tabBarActiveTintColor: '#6200ea',
+          tabBarInactiveTintColor: '#757575',
+          tabBarStyle: { backgroundColor: '#f5f5f5' },
+        }}
+      >
+        <Tab.Screen
+          name="Tasks"
+          component={TasksStack}
+          options={{
+            tabBarLabel: 'Tareas',
+            tabBarIcon: ({ color, size }) => (
+              <Icon name="list" color={color} size={size} />
+            ),
+            headerShown: false,
+          }}
+        />
+        <Tab.Screen
+          name="InProgress"
+          component={InProgressTasksScreen}
+          options={{
+            tabBarLabel: 'En Progreso',
+            tabBarIcon: ({ color, size }) => (
+              <Icon name="autorenew" color={color} size={size} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{
+            tabBarLabel: 'Perfil',
+            tabBarIcon: ({ color, size }) => (
+              <Icon name="person" color={color} size={size} />
+            ),
+          }}
+        />
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
+}
+
+// Estilos
+const styles = StyleSheet.create({
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
+  subtitle: { fontSize: 18, color: '#424242', marginBottom: 16 },
+});
