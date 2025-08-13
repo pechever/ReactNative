@@ -1,0 +1,67 @@
+// App.js
+import * as React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { Button, Text, View, StyleSheet } from 'react-native';
+
+// Crear el Stack Navigator
+const Stack = createStackNavigator();
+
+// Pantalla de lista de tareas
+function TaskListScreen({ navigation }) {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Lista de Tareas</Text>
+      <Button
+        title="Ver Detalles de Tarea"
+        onPress={() => navigation.navigate('TaskDetails', { taskId: 1 })}
+      />
+    </View>
+  );
+}
+
+// Pantalla de detalles de tarea
+function TaskDetailsScreen({ route, navigation }) {
+  const { taskId } = route.params || {};
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Detalles de la Tarea #{taskId}</Text>
+      <Text style={styles.subtitle}>Descripción: Completar informe mensual</Text>
+      <Button title="Volver" onPress={() => navigation.goBack()} />
+    </View>
+  );
+}
+
+// Componente principal
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName="TaskList"
+        screenOptions={{
+          headerStyle: { backgroundColor: '#6200ea' },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold' },
+        }}
+      >
+        <Stack.Screen
+          name="TaskList"
+          component={TaskListScreen}
+          options={{ title: 'TaskMaster - Tareas' }}
+        />
+        <Stack.Screen
+          name="TaskDetails"
+          component={TaskDetailsScreen}
+          options={{ title: 'Detalles de Tarea' }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+// Estilos
+const styles = StyleSheet.create({
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
+  subtitle: { fontSize: 18, marginBottom: 16 },
+});
