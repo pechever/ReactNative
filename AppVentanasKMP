@@ -1,0 +1,61 @@
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.unit.dp
+
+
+
+
+sealed class Screen {
+    object Home : Screen()
+    object Details : Screen()
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun App() {
+    var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Compose Multiplatform") }
+            )
+        }
+    ) {
+        Box(modifier = Modifier.padding(it)) {
+            when (currentScreen) {
+                is Screen.Home -> HomeScreen(onNavigate = { currentScreen = Screen.Details })
+                is Screen.Details -> DetailsScreen(onBack = { currentScreen = Screen.Home })
+            }
+        }
+    }
+}
+
+@Composable
+fun HomeScreen(onNavigate: () -> Unit) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Pantalla Principal")
+        Spacer(Modifier.height(16.dp))
+        Button(onClick = onNavigate) {
+            Text("Ir a Detalles")
+        }
+    }
+}
+
+@Composable
+fun DetailsScreen(onBack: () -> Unit) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Pantalla de Detalles")
+        Spacer(Modifier.height(16.dp))
+        Button(onClick = onBack) {
+            Text("Regresar")
+        }
+    }
+}
