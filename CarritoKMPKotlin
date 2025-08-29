@@ -1,0 +1,137 @@
+package com.feb.kmpapp
+
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+
+
+// --- MODELO ---
+data class Producto(val id: Int, val nombre: String, val precio: Double)
+
+// --- APP ---
+@Composable
+fun App() {
+    var pantalla by remember { mutableStateOf("catalogo") }
+    var carrito by remember { mutableStateOf(listOf<Producto>()) }
+
+    val productos = listOf(
+        Producto(1, "Laptop", 1200.0),
+        Producto(2, "Auriculares", 150.0),
+        Producto(3, "Mouse Gamer", 80.0),
+        Producto(4, "Teclado Mecánico", 100.0),
+        Producto(5, "Teclado Manual", 70.0),
+        Producto(6, "Lapiz Mecánico", 100.0),
+    )
+
+    when (pantalla) {
+        "catalogo" -> CatalogoScreen(productos, onAdd = {
+            carrito = carrito + it
+        }, onGoToCart = { pantalla = "carrito" })
+
+        "carrito" -> CarritoScreen(carrito,
+            onConfirm = { pantalla = "confirmacion" },
+            onBack = { pantalla = "catalogo" })
+
+        "confirmacion" -> ConfirmacionScreen(onBackToCatalog = {
+            carrito = emptyList()
+            pantalla = "catalogo"
+        })
+    }
+}
+
+// --- UI: Catálogo ---
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CatalogoScreen(productos: List<Producto>, onAdd: (Producto) -> Unit, onGoToCart: () -> Unit) {
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text("Catálogo de Productos") },
+                actions = { Button(onClick = onGoToCart) { Text("Ver Carrito") } })
+        }
+    ) { padding ->
+        LazyColumn(modifier = Modifier.padding(padding)) {
+            items(productos) { producto ->
+                Card(modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text(producto.nombre, style = MaterialTheme.typography.titleLarge)
+                        Text("Precio: $${producto.precio}")
+                        Spacer(Modifier.height(8.dp))
+                        Button(onClick = { onAdd(producto) }) {
+                            Text("Agregar al Carrito")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// --- UI: Carrito ---
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CarritoScreen(carrito: List<Producto>, onConfirm: () -> Unit, onBack: () -> Unit) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Tu Carrito") },
+                navigationIcon = { Button(onClick = onBack) { Text("Atrás") } }
+            )
+        }
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+            if (carrito.isEmpty()) {
+                Text("El carrito está vacío", Modifier.padding(16.dp))
+            } else {
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(carrito) { producto ->
+                        Text("• ${producto.nombre} - $${producto.precio}", Modifier.padding(8.dp))
+                    }
+                }
+                val total = carrito.sumOf { it.precio }
+                Text("Total: $${total}", Modifier.padding(16.dp))
+                Button(
+                    onClick = onConfirm,
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                ) {
+                    Text("Confirmar Pedido")
+                }
+            }
+        }
+    }
+}
+
+// --- UI: Confirmación ---
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ConfirmacionScreen(onBackToCatalog: () -> Unit) {
+    Scaffold(
+        topBar = { TopAppBar(title = { Text("Confirmación") }) }
+    ) { padding ->
+        Column(
+            Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            Text("✅ ¡Tu pedido ha sido confirmado!")
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = onBackToCatalog) {
+                Text("Volver al Catálogo")
+            }
+        }
+    }
+}
