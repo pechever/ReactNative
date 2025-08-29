@@ -1,0 +1,9 @@
+// iosMain/src/iosMain/kotlin/main.kt
+import androidx.compose.ui.window.ComposeUIViewController
+import platform.UIKit.UIViewController
+import App
+import AppState
+
+fun MainViewController(): UIViewController = ComposeUIViewController {
+    App(AppState())
+}
