@@ -1,0 +1,207 @@
+import React, { useState } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+
+// Define theme colors in a single variable
+const theme = {
+  primaryColor: '#6200EE', // Main color for buttons, headers, etc.
+  secondaryColor: '#BB86FC', // Accent color for secondary elements
+  textColor: '#FFFFFF', // Text color for buttons and headers
+  backgroundColor: '#F5F5F5', // Background color
+  inputBackground: '#E0E0E0', // Input field background
+};
+
+// Login Screen
+function LoginScreen({ navigation }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = () => {
+    if (username && password) {
+      navigation.navigate('Cart');
+    } else {
+      alert('Please enter username and password');
+    }
+  };
+
+  return (
+    <View style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
+      <Text style={[styles.title, { color: theme.primaryColor }]}>Login</Text>
+      <TextInput
+        style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.primaryColor }]}
+        placeholder="Username"
+        value={username}
+        onChangeText={setUsername}
+      />
+      <TextInput
+        style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.primaryColor }]}
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: theme.primaryColor }]}
+        onPress={handleLogin}
+      >
+        <Text style={[styles.buttonText, { color: theme.textColor }]}>Login</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+// Cart Screen
+function CartScreen() {
+  const [cart, setCart] = useState([]);
+  const [itemName, setItemName] = useState('');
+  const [itemPrice, setItemPrice] = useState('');
+
+  const addItem = () => {
+    if (itemName && itemPrice) {
+      setCart([...cart, { id: Date.now().toString(), name: itemName, price: parseFloat(itemPrice) }]);
+      setItemName('');
+      setItemPrice('');
+    } else {
+      alert('Please enter item name and price');
+    }
+  };
+
+  const removeItem = (id) => {
+    setCart(cart.filter(item => item.id !== id));
+  };
+
+  const renderItem = ({ item }) => (
+    <View style={styles.cartItem}>
+      <Text style={[styles.cartText, { color: theme.primaryColor }]}>
+        {item.name} - ${item.price.toFixed(2)}
+      </Text>
+      <TouchableOpacity
+        style={[styles.removeButton, { backgroundColor: theme.secondaryColor }]}
+        onPress={() => removeItem(item.id)}
+      >
+        <Text style={[styles.buttonText, { color: theme.textColor }]}>Remove</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  return (
+    <View style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
+      <Text style={[styles.title, { color: theme.primaryColor }]}>Shopping Cart</Text>
+      <TextInput
+        style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.primaryColor }]}
+        placeholder="Item Name"
+        value={itemName}
+        onChangeText={setItemName}
+      />
+      <TextInput
+        style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.primaryColor }]}
+        placeholder="Item Price"
+        value={itemPrice}
+        onChangeText={setItemPrice}
+        keyboardType="numeric"
+      />
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: theme.primaryColor }]}
+        onPress={addItem}
+      >
+        <Text style={[styles.buttonText, { color: theme.textColor }]}>Add Item</Text>
+      </TouchableOpacity>
+      <FlatList
+        data={cart}
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
+        style={styles.cartList}
+      />
+      <Text style={[styles.total, { color: theme.primaryColor }]}>
+        Total: ${cart.reduce((sum, item) => sum + item.price, 0).toFixed(2)}
+      </Text>
+    </View>
+  );
+}
+
+// Navigation Setup
+const Stack = createStackNavigator();
+
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Login">
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{
+            headerStyle: { backgroundColor: theme.primaryColor },
+            headerTintColor: theme.textColor,
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+        <Stack.Screen
+          name="Cart"
+          component={CartScreen}
+          options={{
+            headerStyle: { backgroundColor: theme.primaryColor },
+            headerTintColor: theme.textColor,
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+// Styles
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  input: {
+    height: 40,
+    borderWidth: 1,
+    borderColor: theme.primaryColor,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  button: {
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  cartList: {
+    flex: 1,
+  },
+  cartItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.primaryColor,
+  },
+  cartText: {
+    fontSize: 16,
+  },
+  removeButton: {
+    padding: 5,
+    borderRadius: 5,
+  },
+  total: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+});
